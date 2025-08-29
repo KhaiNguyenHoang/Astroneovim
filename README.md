@@ -83,3 +83,4 @@ nvim
    Save the configuration file and exit Neovim
 # Astroneovim
 # Astroneovim
+# Astroneovim
