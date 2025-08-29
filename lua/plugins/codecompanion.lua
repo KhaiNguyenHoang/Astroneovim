@@ -34,7 +34,7 @@ return {
       -- Qwen adapter (OpenRouter)
       qwen = function()
         return require("codecompanion.adapters").extend("openai_compatible", {
-          formatted_name = "Deepseek V3.1 (free)",
+          formatted_name = "Qwen3",
           env = {
             url = "https://openrouter.ai/api",
             api_key = "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",
@@ -43,7 +43,7 @@ return {
             Accept = "application/json",
             ["Content-Type"] = "application/json",
           },
-          schema = { model = { default = "deepseek/deepseek-chat-v3.1:free" } },
+          schema = { model = { default = "qwen/qwen3-coder" } },
         })
       end,
 
