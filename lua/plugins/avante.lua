@@ -2,15 +2,15 @@
 return {
   "yetone/avante.nvim",
   optional = true,
-  enabled = false,
+  enabled = true,
   opts = {
     behaviour = {
-      auto_suggestions = false, -- Experimental stage
+      auto_suggestions = false,
       enable_cursor_planning_mode = false,
       enable_token_counting = false,
       auto_apply_diff_after_generation = false,
       support_paste_from_clipboard = true,
-      minimize_diff = true, -- Whether to remove unchanged lines when applying a code block
+      minimize_diff = true,
       enable_claude_text_editor_tool_mode = false,
     },
     suggestion = {
@@ -18,129 +18,67 @@ return {
       throttle = 1000,
     },
     windows = {
-      ---@type "right" | "left" | "top" | "bottom"
-      position = "right", -- the position of the sidebar
-      wrap = true, -- similar to vim.o.wrap
-      width = 50, -- default % based on available width
+      position = "right",
+      wrap = true,
+      width = 50,
       sidebar_header = {
-        enabled = true, -- true, false to enable/disable the header
-        align = "center", -- left, center, right for title
+        enabled = true,
+        align = "center",
         rounded = true,
       },
       input = {
         prefix = "> ",
-        height = 8, -- Height of the input window in vertical layout
+        height = 8,
       },
       edit = {
         border = "rounded",
-        start_insert = true, -- Start insert mode when opening the edit window
+        start_insert = true,
       },
       ask = {
-        floating = false, -- Open the 'AvanteAsk' prompt in a floating window
-        start_insert = true, -- Start insert mode when opening the ask window
+        floating = false,
+        start_insert = true,
         border = "rounded",
-        ---@type "ours" | "theirs"
-        focus_on_apply = "ours", -- which diff to focus after applying
+        focus_on_apply = "ours",
       },
     },
-    -- list: rag_search, python, git_diff, git_commit, list_files, search_files, search_keyword, read_file_toplevel_symbols, read_file, create_file, rename_file, delete_file, create_dir, rename_dir, delete_dir, bash, web_search, fetch
     disabled_tools = {},
-    -- file_selector = {
-    --- @alias FileSelectorProvider "native" | "fzf" | "mini.pick" | "snacks" | "telescope" | string | fun(params: avante.file_selector.IParams|nil): nil
-    -- provider = "snacks",
-    --   provider_opts = {},
-    -- },
     auto_suggestions_provider = nil,
     providers = {
-      gemini = {
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
-        model = "gemini-2.5-flash-preview-05-20",
-        timeout = 30000, -- Timeout in milliseconds
+      openrouter = {
+        __inherited_from = "openai", -- bắt buộc để Avante nhận provider custom
+        endpoint = "https://openrouter.ai/api/v1/chat/completions",
+        model = "deepseek/deepseek-chat-v3.1",
+        timeout = 30000,
         extra_request_body = {
-          generationConfig = {
-            temperature = 0,
-            maxOutputTokens = 20480,
-            thinkingConfig = {
-              includeThoughts = false,
-            },
-          },
+          temperature = 0.7,
+          max_tokens = 8192,
         },
-      },
-      groq = {
-        __inherited_from = "openai",
-        api_key_name = "GROQ_API_KEY",
-        endpoint = "https://api.groq.com/openai/v1",
-        model = "deepseek-r1-distill-llama-70b",
-        -- disable_tools = true,
-      },
-      ovh = {
-        __inherited_from = "openai",
-        api_key_name = "OVH_API_KEY",
-        endpoint = "https://deepseek-r1-distill-llama-70b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1",
-        model = "DeepSeek-R1-Distill-Llama-70B",
-        extra_request_body = {
-          max_tokens = 1024,
-          top_p = 0.9,
-          temperature = 0,
+        headers = {
+          ["Authorization"] = "Bearer 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",
         },
-        -- disable_tools = true,
       },
     },
-    provider = "gemini",
+    provider = "openrouter",
     rag_service = {
-      enabled = false, -- Enables the RAG service
-      host_mount = os.getenv "HOME" .. "/git", -- Host mount path for the rag service
+      enabled = false,
+      host_mount = os.getenv "HOME" .. "/git",
       runner = "docker",
-      llm = { -- Language Model (LLM) configuration for RAG service
-        provider = "gemini", -- LLM provider
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models", -- LLM API endpoint
-        api_key = "GEMINI_API_KEY", -- Environment variable name for the LLM API key
-        model = "gemini-2.5-flash-preview-05-20", -- LLM model name
-        extra = nil, -- Additional configuration options for LLM
+      llm = {
+        provider = "openrouter",
+        endpoint = "https://openrouter.ai/api/v1/chat/completions",
+        api_key = "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",
+        model = "deepseek/deepseek-chat-v3.1",
       },
-      embed = { -- Embedding model configuration for RAG service
-        provider = "openai", -- Embedding provider
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models", -- Embedding API endpoint
-        api_key = "GEMINI_API_KEY", -- Environment variable name for the embedding API key
-        model = "gemini-embedding-exp-03-07", -- Embedding model name
-        extra = nil, -- Additional configuration options for the embedding model
+      embed = {
+        provider = "openai",
+        endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
+        api_key = "AIzaSyC3ncnx_yAwjnCdfaH534LCYCIK9fRvJcA",
+        model = "gemini-embedding-exp-03-07",
       },
-      docker_extra_args = "", -- Extra arguments to pass to the docker command
+      docker_extra_args = "",
     },
   },
   specs = {
-    -- {
-    --   "saghen/blink.cmp",
-    --   optional = true,
-    --   opts = {
-    --     sources = {
-    --       default = {
-    --         "avante_commands",
-    --         "avante_mentions",
-    --         "avante_files",
-    --       },
-    --       providers = {
-    --         avante_commands = {
-    --           name = "avante_commands",
-    --           module = "blink.compat.source",
-    --           score_offset = 90, -- show at a higher priority than lsp
-    --           opts = {},
-    --         },
-    --         avante_files = {
-    --           name = "avante_files",
-    --           module = "blink.compat.source",
-    --           score_offset = 100, -- show at a higher priority than lsp
-    --           opts = {},
-    --         },
-    --         avante_mentions = {
-    --           name = "avante_mentions",
-    --           module = "blink.compat.source",
-    --           score_offset = 1000, -- show at a higher priority than lsp
-    --           opts = {},
-    --         },
-    --       },
-    --     },
-    --   },
-    -- },
+    -- thêm nvim-cmp sources hoặc blink.cmp nếu muốn
   },
 }
