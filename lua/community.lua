@@ -29,6 +29,7 @@ return {
   { import = "astrocommunity.editing-support.vector-code-nvim" },
   { import = "astrocommunity.editing-support.codecompanion-nvim" },
   { import = "astrocommunity.editing-support.mcphub-nvim" },
+  { import = "astrocommunity.motion.hop-nvim" },
   { import = "astrocommunity.git.octo-nvim" },
   { import = "astrocommunity.git.diffview-nvim" },
   { import = "astrocommunity.lsp.garbage-day-nvim" },
