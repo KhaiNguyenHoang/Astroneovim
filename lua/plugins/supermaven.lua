@@ -1,7 +1,8 @@
 ---@type LazySpec
 return {
   "supermaven-nvim",
-  enabled = function() return vim.env.DISPLAY ~= nil and vim.env.DISPLAY ~= "" end,
+  -- enabled = function() return vim.env.DISPLAY ~= nil and vim.env.DISPLAY ~= "" end,
+  enabled = false,
   lazy = true,
   event = "VeryLazy",
   opts = {

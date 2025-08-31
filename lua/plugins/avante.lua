@@ -1,9 +1,28 @@
 ---@type LazySpec
 return {
   "yetone/avante.nvim",
-  optional = true,
-  enabled = true,
+  event = "VeryLazy",
+  version = false,
   opts = {
+    -- Provider configuration
+    provider = "openrouter",
+    providers = {
+      openrouter = {
+        __inherited_from = "openai",
+        endpoint = "https://openrouter.ai/api/v1/chat/completions", -- FIXED
+        model = "deepseek/deepseek-chat-v3.1",
+        timeout = 30000,
+        extra_request_body = {
+          temperature = 0.7,
+          max_tokens = 8192,
+        },
+        headers = {
+          ["Authorization"] = "Bearer " .. (os.getenv "OPENROUTER_API_KEY" or ""),
+        },
+      },
+    },
+
+    -- Behavior settings
     behaviour = {
       auto_suggestions = false,
       enable_cursor_planning_mode = false,
@@ -13,10 +32,8 @@ return {
       minimize_diff = true,
       enable_claude_text_editor_tool_mode = false,
     },
-    suggestion = {
-      debounce = 600,
-      throttle = 1000,
-    },
+
+    -- UI/Windows configuration
     windows = {
       position = "right",
       wrap = true,
@@ -41,44 +58,45 @@ return {
         focus_on_apply = "ours",
       },
     },
+
+    -- Advanced features
     disabled_tools = {},
     auto_suggestions_provider = nil,
-    providers = {
-      openrouter = {
-        __inherited_from = "openai", -- bắt buộc để Avante nhận provider custom
-        endpoint = "https://openrouter.ai/api/v1/chat/completions",
-        model = "deepseek/deepseek-chat-v3.1",
-        timeout = 30000,
-        extra_request_body = {
-          temperature = 0.7,
-          max_tokens = 8192,
-        },
-        headers = {
-          ["Authorization"] = "Bearer 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",
-        },
-      },
-    },
-    provider = "openrouter",
     rag_service = {
       enabled = false,
       host_mount = os.getenv "HOME" .. "/git",
       runner = "docker",
       llm = {
         provider = "openrouter",
-        endpoint = "https://openrouter.ai/api/v1/chat/completions",
-        api_key = "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",
+        endpoint = "https://openrouter.ai/api/v1/chat/completions", -- FIXED
+        api_key = os.getenv "OPENROUTER_API_KEY" or "",
         model = "deepseek/deepseek-chat-v3.1",
       },
       embed = {
         provider = "openai",
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
-        api_key = "AIzaSyC3ncnx_yAwjnCdfaH534LCYCIK9fRvJcA",
-        model = "gemini-embedding-exp-03-07",
+        endpoint = "https://generativelanguage.googleapis.com/v1beta",
+        api_key = os.getenv "GOOGLE_API_KEY" or "",
+        model = "embedding-001",
       },
       docker_extra_args = "",
     },
   },
-  specs = {
-    -- thêm nvim-cmp sources hoặc blink.cmp nếu muốn
+
+  -- Essential dependencies only
+  dependencies = {
+    "nvim-tree/nvim-web-devicons",
+    "stevearc/dressing.nvim",
+    "nvim-lua/plenary.nvim",
+    "MunifTanjim/nui.nvim",
   },
+
+  init = function()
+    local map = vim.keymap.set
+    local opts = { silent = true, noremap = true }
+
+    map("n", "<leader>aa", "<cmd>AvanteAsk<cr>", vim.tbl_extend("force", opts, { desc = "Avante: Ask" }))
+    map("n", "<leader>ar", "<cmd>AvanteRefresh<cr>", vim.tbl_extend("force", opts, { desc = "Avante: Refresh" }))
+    map("v", "<leader>aa", "<cmd>AvanteAsk<cr>", vim.tbl_extend("force", opts, { desc = "Avante: Ask (visual)" }))
+    map("n", "<leader>at", "<cmd>AvanteToggle<cr>", vim.tbl_extend("force", opts, { desc = "Avante: Toggle" }))
+  end,
 }
