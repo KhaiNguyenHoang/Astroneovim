@@ -11,9 +11,9 @@ return {
     {
       "AstroNvim/astrolsp",
       opts = function(_, opts)
-        local maps = opts.mappings
         -- disabl default mapping
         if not opts.mappings then opts.mappings = require("astrocore").empty_map_table() end
+        local maps = opts.mappings
         -- maps.n["<Leader>lA"] = nil
         -- maps.n["<Leader>lG"] = nil
         -- disable default aerial symbols document
@@ -70,12 +70,7 @@ return {
         vim.api.nvim_create_autocmd("FileType", {
           pattern = "sagarename",
           callback = function(event)
-            vim.keymap.set(
-              "n",
-              "<Esc>",
-              "<cmd>confirm q<cr>",
-              { buffer = event.buf, silent = true, cond = "textDocument/rename" }
-            )
+            vim.keymap.set("n", "<Esc>", "<cmd>confirm q<cr>", { buffer = event.buf, silent = true })
           end,
         })
       end,

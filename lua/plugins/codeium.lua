@@ -15,6 +15,7 @@ return {
       manual = false,
       enabled = true,
       map_keys = true,
+      filetypes = { ["grug-far"] = false },
       key_bindings = {
         -- Accept the current completion.
         accept = "<C-l>",

@@ -15,7 +15,7 @@ return {
         enabled = true,
       },
       tmux = {
-        enabled = true,
+        enabled = false,
         -- remove `-w` to disable copy to host client's clipboard
         cmd = { "tmux", "set-buffer", "-w" },
       },
@@ -23,7 +23,7 @@ return {
         enabled = true,
         -- escseq = 'tmux',     -- use tmux escape sequence, only enable if
         -- you're using tmux and have issues (see #4)
-        ssh_only = false, -- false to OSC52 yank also in local sessions
+        ssh_only = true, -- false to OSC52 yank also in local sessions
         silent = true, -- true to disable the "n chars copied" echo
         echo_hl = "Directory", -- highlight group of the OSC52 echo message
       },
@@ -34,7 +34,7 @@ return {
       --
       -- For advanced customization set to a lua function returning a boolean
       -- for example, the default condition is:
-      -- validate_yank = function() return vim.v.operator == "y" end,
+      validate_yank = function() return vim.v.operator == "y" end,
     }
   end,
 }

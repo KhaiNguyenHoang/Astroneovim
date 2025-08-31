@@ -8,6 +8,7 @@
 return {
   "AstroNvim/astrocore",
   version = false,
+  branch = "v3",
   ---@type AstroCoreOpts
   opts = {
     mappings = {
@@ -40,13 +41,55 @@ return {
     -- User comands
     commands = {},
     autocmds = {
-      openhelpinvertical = {
+      -- Overwrite default auto_quit: https://github.com/AstroNvim/AstroNvim/blob/2bb2fa9a01311ae7f9bfebf7b3ae996bcc4717be/lua/astronvim/plugins/_astrocore_autocmds.lua#L25
+      auto_quit = {
         {
-          event = "FileType",
-          pattern = "help",
-          desc = "View help in vertical window",
-          group = "openhelpinvertical",
-          callback = function() vim.api.nvim_command "wincmd L" end,
+          event = "BufEnter",
+          desc = "Quit AstroNvim if more than one window is open and only sidebar windows are list",
+          callback = function()
+            local wins = vim.api.nvim_tabpage_list_wins(0)
+            -- Both neo-tree and aerial will auto-quit if there is only a single window left
+            if #wins <= 1 then return end
+            local sidebar_fts = {
+              aerial = true,
+              ["neo-tree"] = true,
+              undotree = true,
+              dapui_scopes = true,
+              dapui_breakpoints = true,
+              dapui_stacks = true,
+              dapui_watches = true,
+              dap_repl = true,
+              dapui_console = true,
+              ["neotest-summary"] = true,
+              ["neotest-output-panel"] = true,
+              dbui = true,
+              codecompanion = true,
+              -- Still not work as expected
+              OverseerList = true,
+              ["comment-box"] = true,
+              ["grug-far"] = true,
+              ["qf"] = true,
+            }
+            for _, winid in ipairs(wins) do
+              if vim.api.nvim_win_is_valid(winid) then
+                local bufnr = vim.api.nvim_win_get_buf(winid)
+                local filetype = vim.bo[bufnr].filetype
+                -- If any visible windows are not sidebars, early return
+                if not sidebar_fts[filetype] then
+                  return
+                -- If the visible window is a sidebar
+                else
+                  -- only count filetypes once, so remove a found sidebar from the detection
+                  sidebar_fts[filetype] = nil
+                end
+              end
+            end
+            if #vim.api.nvim_list_tabpages() > 1 then
+              vim.cmd.tabclose()
+            else
+              vim.cmd.qall()
+            end
+          end,
         },
       },
       disable_diagnostic_environment = {
@@ -54,18 +97,17 @@ return {
           event = "BufReadPost",
           pattern = { ".env", ".env.*" },
           desc = "Disable diagnostic for environment files",
-          group = "disable_diagnostic_environment",
+          -- group = "disable_diagnostic_environment",
           callback = function(args) vim.diagnostic.enable(false, { bufnr = args.buf }) end,
         },
-        -- {
-        --   event = "BufReadPost",
-        --   pattern = os.getenv "HOME" .. "/.local/share/nvim/gp/chats/*.md",
-        --   desc = "Disable diagnostic for chat ai files",
-        --   group = "disable_diagnostic_environment",
-        --   callback = function(args) vim.diagnostic.enable(false, { bufnr = args.buf }) end,
-        -- },
       },
     },
+    -- git_worktrees = {
+    --   {
+    --     toplevel = vim.env.HOME .. "/.config",
+    --     gitdir = vim.env.HOME .. "/git/config",
+    --   },
+    -- },
     rooter = {
       -- list of detectors in order of prevalence, elements can be:
       --   "lsp" : lsp detection
@@ -74,10 +116,10 @@ return {
       detector = {
         "lsp", -- highest priority is getting workspace from running language servers
         { ".git", "_darcs", ".hg", ".bzr", ".svn" }, -- next check for a version controlled parent directory
-        { "lua", "MakeFile", "package.json", "lazy-lock.json" }, -- lastly check for known project root files
+        { "lua", "MakeFile", "package.json", "lazy-lock.json", "yazi.toml", "hyprland.conf" }, -- lastly check for known project root files
       },
       ignore = {
-        servers = {}, -- list of language server names to ignore (Ex. { "efm" })
+        servers = { "taplo" }, -- list of language server names to ignore (Ex. { "efm" })
         dirs = { -- list of directory patterns (Ex. { "~/.cargo/*" })
           "*/.cargo/*",
           ".node_modules/*",
@@ -87,6 +129,7 @@ return {
           "*.ass",
         },
       },
+      notify = false,
       autochdir = true,
     },
     -- Configure core features of AstroNvim
@@ -94,14 +137,14 @@ return {
       large_buf = { size = 1024 * 500, lines = 10000, enabled = true }, -- set global limits for large files for disabling features like treesitter
       autopairs = true, -- enable autopairs at start
       cmp = true, -- enable completion at start
-      diagnostics = { virtual_text = true, virtual_lines = true }, -- diagnostic settings on startup
+      diagnostics = { virtual_text = false, virtual_lines = false }, -- diagnostic settings on startup
       highlighturl = true, -- highlight URLs at start
       notifications = true, -- enable notifications at start
     },
     -- Diagnostics configuration (for vim.diagnostics.config({...})) when diagnostics are on
     diagnostics = {
-      virtual_text = false,
-      underline = false,
+      virtual_text = true,
+      underline = true,
     },
     -- vim options can be configured here
     options = {
@@ -112,8 +155,8 @@ return {
         signcolumn = "auto", -- sets vim.opt.signcolumn to auto
         wrap = true, -- sets vim.opt.wrap
         mouse = "h",
-        cmdheight = 1,
         whichwrap = "lh",
+        scrolloff = 10,
         shada = { "!", "'1000", "<1000", "s10", "h" },
       },
       g = { -- vim.g.<key>

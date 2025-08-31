@@ -6,7 +6,8 @@ end
 ---@type LazySpec
 return {
   "saghen/blink.cmp",
-  version = "*",
+  version = "^1",
+  optional = true,
   dependencies = {
     {
       "Kaiser-Yang/blink-cmp-git",
@@ -17,6 +18,7 @@ return {
     { "xzbdmw/colorful-menu.nvim", lazy = true },
     -- ... other dependencies
   },
+
   opts = {
     sources = {
       -- add 'git' to the list
@@ -97,12 +99,21 @@ return {
       keymap = {
         -- recommended, as the default keymap will only show and select the next item
         ["<Tab>"] = {
-          function(cmp)
-            if cmp.is_ghost_text_visible() and not cmp.is_menu_visible() then return cmp.accept() end
-          end,
+          -- function(cmp)
+          --   if cmp.is_ghost_text_visible() and not cmp.is_menu_visible() then return cmp.accept() end
+          -- end,
           "show_and_insert",
           "select_next",
         },
+        ["<CR>"] = {
+          function(cmp)
+            if cmp.is_ghost_text_visible() and not cmp.is_menu_visible() then return cmp.accept() end
+          end,
+          "accept_and_enter",
+          "fallback",
+        },
+        ["<Left>"] = {},
+        ["<Right>"] = {},
       },
       completion = {
         menu = {
@@ -133,30 +144,56 @@ return {
     },
     keymap = {
       ["<Tab>"] = {
-        "select_next",
+        function(cmp) return cmp.select_next { auto_insert = vim.b.visual_multi ~= 1 } end,
+        "snippet_forward",
         function(cmp)
           if has_words_before() or vim.api.nvim_get_mode().mode == "c" then return cmp.show() end
         end,
         "fallback",
       },
       ["<S-Tab>"] = {
-        "select_prev",
+        function(cmp) return cmp.select_prev { auto_insert = vim.b.visual_multi ~= 1 } end,
+        "snippet_backward",
         function(cmp)
           if vim.api.nvim_get_mode().mode == "c" then return cmp.show() end
         end,
         "fallback",
       },
-      -- ["<CR>"] = { "snippet_forward", "accept", "fallback" },
-      ["<CR>"] = {
+      ["<C-j>"] = {
+        function(cmp) return cmp.select_prev { auto_insert = vim.b.visual_multi ~= 1 } end,
+        "snippet_backward",
+        "fallback",
+      },
+      ["<C-k>"] = {
+        function(cmp) return cmp.select_next { auto_insert = vim.b.visual_multi ~= 1 } end,
         "snippet_forward",
+        "fallback",
+      },
+      ["<CR>"] = {
         "accept",
         "fallback",
       },
     },
-
+    -- fuzzy = {
+    --   sorts = {
+    --     function(a, b)
+    --       if (a.client_name == nil or b.client_name == nil) or (a.client_name == b.client_name) then return end
+    --       return b.client_name == "emmet_ls"
+    --     end,
+    --     -- default sorts
+    --     "exact",
+    --     "score",
+    --     "sort_text",
+    --   },
+    --
+    --   use_frecency = false,
+    --   use_proximity = false,
+    --   max_typos = function() return 0 end,
+    -- },
     completion = {
       trigger = {
         show_on_backspace_in_keyword = true,
+        show_on_insert = true,
       },
       ghost_text = {
         enabled = true,
@@ -166,8 +203,9 @@ return {
       documentation = {
         draw = function(opts)
           if opts.item and opts.item.documentation then
-            local out = require("pretty_hover.parser").parse(opts.item.documentation.value)
-            opts.item.documentation.value = out:string()
+            local hover_parser = require "pretty_hover.parser"
+            local parsed_ok, result = pcall(function() return hover_parser.parse(opts.item.documentation.value) end)
+            if parsed_ok and result then opts.item.documentation.value = result:string() end
           end
 
           opts.default_implementation(opts)
@@ -182,16 +220,49 @@ return {
           },
           components = {
             label = {
-              text = function(ctx) return require("colorful-menu").blink_components_text(ctx) end,
-              highlight = function(ctx) return require("colorful-menu").blink_components_highlight(ctx) end,
+              text = function(ctx)
+                local highlights_info = require("colorful-menu").blink_highlights(ctx)
+                if highlights_info ~= nil then
+                  -- Or you want to add more item to label
+                  return highlights_info.label
+                else
+                  return ctx.label
+                end
+              end,
+              highlight = function(ctx)
+                local highlights = {}
+                local highlights_info = require("colorful-menu").blink_highlights(ctx)
+                if highlights_info ~= nil then highlights = highlights_info.highlights end
+                for _, idx in ipairs(ctx.label_matched_indices) do
+                  table.insert(highlights, { idx, idx + 1, group = "BlinkCmpLabelMatch" })
+                end
+                -- Do something else
+                return highlights
+              end,
             },
             source_name = {
-              width = { max = 30 },
+              width = { max = 100 },
               text = function(ctx) return "(" .. ctx.source_name .. ")" end,
               highlight = "BlinkCmpSource",
             },
           },
         },
+        direction_priority = function()
+          local ctx = require("blink.cmp").get_context()
+          local item = require("blink.cmp").get_selected_item()
+          if ctx == nil or item == nil then return { "s", "n" } end
+
+          local item_text = item.textEdit ~= nil and item.textEdit.newText or item.insertText or item.label
+          local is_multi_line = item_text:find "\n" ~= nil
+
+          -- after showing the menu upwards, we want to maintain that direction
+          -- until we re-open the menu, so store the context id in a global variable
+          if is_multi_line or vim.g.blink_cmp_upwards_ctx_id == ctx.id then
+            vim.g.blink_cmp_upwards_ctx_id = ctx.id
+            return { "n", "s" }
+          end
+          return { "s", "n" }
+        end,
       },
     },
   },
