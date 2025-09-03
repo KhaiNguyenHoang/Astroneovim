@@ -1,14 +1,8 @@
--- if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
--- AstroLSP allows you to customize the features in AstroNvim's LSP configuration engine
--- Configuration documentation can be found with `:h astrolsp`
--- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
---       as this provides autocomplete and documentation while editing
-
 ---@type LazySpec
 return {
   "AstroNvim/astrolsp",
   version = false,
+  branch = "v4",
   ---@type AstroLSPOpts
   opts = {
     defaults = {},
@@ -20,11 +14,13 @@ return {
       semantic_tokens = true, -- enable/disable semantic token highlighting
       signature_help = false,
     },
-    -- capabilities = vim.tbl_deep_extend(
-    --   "force",
-    --   vim.lsp.protocol.make_client_capabilities(),
-    --   require("cmp_nvim_lsp").default_capabilities()
-    -- ),
+    capabilities = {
+      textDocument = {
+        -- TODO: Wait till this PR is merged https://github.com/neovim/neovim/pull/35578
+        -- This is because require('blink.cmp').get_lsp_capabilities() doesn't set the necessary capability for onTypeFormatting.
+        onTypeFormatting = { dynamicRegistration = false },
+      },
+    },
     -- customize lsp formatting options
     formatting = {
       -- use conform-nvim
@@ -101,8 +97,8 @@ return {
         ["<Leader>uY"] = {
           function() require("astrolsp.toggles").buffer_semantic_tokens() end,
           desc = "Toggle LSP semantic highlight (buffer)",
-          cond = function(client)
-            return client.supports_method "textDocument/semanticTokens/full" and vim.lsp.semantic_tokens ~= nil
+          cond = function(client, bufnr)
+            return client.supports_method("textDocument/semanticTokens/full", bufnr) and vim.lsp.semantic_tokens ~= nil
           end,
         },
       },

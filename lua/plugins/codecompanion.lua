@@ -71,5 +71,17 @@ return {
       inline = { adapter = "qwen" },
       cmd = { adapter = "qwen" },
     },
+    display = {
+      chat = {
+        intro_message = "Welcome to CodeCompanion ✨!\n Press ? for options",
+        separator = "─", -- The separator between the different messages in the chat buffer
+        show_context = true, -- Show context (from slash commands and variables) in the chat buffer?
+        show_header_separator = false, -- Show header separators in the chat buffer? Set this to false if you're using an external markdown formatting plugin
+        show_settings = false, -- Show LLM settings at the top of the chat buffer?
+        show_token_count = true, -- Show the token count for each response?
+        show_tools_processing = true, -- Show the loading message when tools are being executed?
+        start_in_insert_mode = false, -- Open the chat buffer in insert mode?
+      },
+    },
   },
 }
