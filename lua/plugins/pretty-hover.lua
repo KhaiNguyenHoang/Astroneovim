@@ -2,12 +2,21 @@
 return {
   "Fildo7525/pretty_hover",
   event = "LspAttach",
+  dependencies = {
+    {
+      "AstroNvim/astrolsp",
+      opts = {
+        mappings = {
+          n = {
+            ["K"] = {
+              function() require("pretty_hover").hover() end,
+              cond = "textDocument/hover",
+              desc = "Toggle pretty hover",
+            },
+          },
+        },
+      },
+    },
+  },
   opts = {},
-  config = function(_, opts)
-    require("pretty_hover").setup(opts)
-
-    -- map key K để gọi pretty_hover thay cho hover mặc định
-    local map = require("astrocore").map
-    map("n", "K", function() require("pretty_hover").hover() end, { desc = "Toggle pretty hover" })
-  end,
 }
