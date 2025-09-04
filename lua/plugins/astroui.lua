@@ -8,7 +8,6 @@
 ---@type LazySpec
 return {
   "AstroNvim/astroui",
-  version = false,
   ---@type AstroUIOpts
   opts = {
     -- change colorscheme

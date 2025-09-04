@@ -1,8 +1,6 @@
 ---@type LazySpec
 return {
   "AstroNvim/astrolsp",
-  version = false,
-  branch = "v4",
   ---@type AstroLSPOpts
   opts = {
     defaults = {},
