@@ -2,14 +2,14 @@
 return {
   "supermaven-nvim",
   -- enabled = function() return vim.env.DISPLAY ~= nil and vim.env.DISPLAY ~= "" end,
-  enabled = false,
+  enabled = true,
   lazy = true,
   event = "VeryLazy",
   opts = {
     -- ignore_filetypes = { cpp = true }, -- or { "cpp", }
     -- color = {
-    --   suggestion_color = "#ffffff",
-    --   cterm = 244,
+    -- suggestion_color = "#ffffff",
+    -- cterm = 244,
     -- },
     condition = function()
       local buf_utils = require "astrocore.buffer"

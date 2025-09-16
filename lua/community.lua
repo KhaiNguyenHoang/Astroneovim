@@ -75,4 +75,5 @@ return {
   { import = "astrocommunity.utility.lua-json5" },
   { import = "astrocommunity.utility.noice-nvim" },
   { import = "astrocommunity.pack.cs-omnisharp" },
+  { import = "astrocommunity.completion.supermaven-nvim" },
 }

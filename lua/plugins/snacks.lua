@@ -1,3 +1,5 @@
+local uv = vim.uv or vim.loop
+
 ---@type LazySpec
 return {
   "folke/snacks.nvim",
@@ -56,7 +58,25 @@ return {
             require("snacks").picker {
               items = filetypes,
               source = "filetypes",
-              layout = "select", -- or vscode
+              layout = {
+                layout = {
+                  backdrop = false,
+                  row = 1,
+                  width = 0.4,
+                  min_width = 30,
+                  height = 0.9,
+                  border = "none",
+                  box = "vertical",
+                  {
+                    win = "input",
+                    height = 1,
+                    border = "rounded",
+                    title = "{title} {live} {flags}",
+                    title_pos = "center",
+                  },
+                  { win = "list", border = "rounded" },
+                },
+              },
               format = function(item)
                 local icon, icon_hl = require("snacks.util").icon(item.text, "filetype")
                 return {
@@ -75,7 +95,24 @@ return {
               end,
             }
           end,
-          desc = "File language (filetype)",
+          desc = "Find & Set language (filetype)",
+        }
+        maps.n["<Leader>fn"] = {
+          function()
+            require("snacks").picker.notifications {
+              confirm = function(picker, item)
+                vim.fn.setreg("+", item.item.msg)
+                local buf = item.buf or vim.api.nvim_win_get_buf(picker.main)
+                local ft = vim.bo[buf].filetype
+                require("snacks").notify(
+                  ("Yanked to register `%s`:\n```%s\n%s\n```"):format("+", ft, item.item.msg),
+                  { title = "Snacks Picker" }
+                )
+                picker:close()
+              end,
+            }
+          end,
+          desc = "Find notifications",
         }
         maps.n["<Leader>fi"] = {
           function()
@@ -83,7 +120,25 @@ return {
               icon_sources = { "nerd_fonts", "emoji" },
               finder = "icons",
               format = "icon",
-              layout = { preset = "vscode" },
+              layout = {
+                layout = {
+                  backdrop = false,
+                  row = 1,
+                  width = 0.4,
+                  min_width = 30,
+                  height = 0.9,
+                  border = "none",
+                  box = "vertical",
+                  {
+                    win = "input",
+                    height = 1,
+                    border = "rounded",
+                    title = "{title} {live} {flags}",
+                    title_pos = "center",
+                  },
+                  { win = "list", border = "rounded" },
+                },
+              },
               confirm = { "copy", "close" },
             }
           end,
@@ -93,13 +148,13 @@ return {
           function()
             local icons = {}
             for kind, icon in pairs(require("astroui").config["icons"]) do
-              if type(icon) == "string" then table.insert(icons, { text = kind, glyph = icon }) end
+              if type(icon) == "string" then table.insert(icons, { text = kind, glyph = icon, cat = "Astro_UI" }) end
             end
             if require("astrocore").is_available "mini.icons" then
               local function add_cat(categories)
                 for _, cat in ipairs(categories) do
                   for _, kind in ipairs(require("mini.icons").list(cat)) do
-                    table.insert(icons, { text = kind, cat = cat })
+                    table.insert(icons, { text = kind, cat = cat, is_mini_icon = true })
                   end
                 end
               end
@@ -109,18 +164,42 @@ return {
             require("snacks").picker {
               items = icons,
               source = "Astro_UI_Icons",
-              layout = "vscode", -- or select
+              layout = {
+                layout = {
+                  backdrop = false,
+                  row = 1,
+                  width = 0.4,
+                  min_width = 30,
+                  height = 0.9,
+                  border = "none",
+                  box = "vertical",
+                  {
+                    win = "input",
+                    height = 1,
+                    border = "rounded",
+                    title = "{title} {live} {flags}",
+                    title_pos = "center",
+                  },
+                  { win = "list", border = "rounded" },
+                },
+              },
               format = function(item)
                 local icon, icon_hl
-                if item.cat then
+                local text_hl = "SnacksPickerIconName"
+                if item.is_mini_icon then
                   icon, icon_hl = require("snacks.util").icon(item.text, item.cat)
+                  text_hl = icon_hl or "SnacksPickerIconName"
                 else
-                  icon, icon_hl = item.glyph, "MiniIconsGreen"
+                  icon, icon_hl = item.glyph, "SnacksPickerIcon"
                 end
-                return {
-                  { icon .. " ", icon_hl },
-                  { item.text, icon_hl },
-                }
+                local a = require("snacks").picker.util.align
+                local ret = {} ---@type snacks.picker.Highlight[]
+                ret[#ret + 1] = { a(icon, 2), icon_hl }
+                ret[#ret + 1] = { " " }
+                ret[#ret + 1] = { a(item.text, 30), text_hl }
+                ret[#ret + 1] = { " " }
+                ret[#ret + 1] = { a(item.cat, 20), "SnacksPickerIconCategory" }
+                return ret
               end,
               -- Paste selected icon to cursor and icon + icon text to clipboard
               confirm = {
@@ -128,7 +207,7 @@ return {
                 function(picker, item)
                   -- Copy icon
                   local icon = item.glyph
-                  if item.cat then
+                  if item.is_mini_icon then
                     icon, _ = require("snacks.util").icon(item.text, item.cat)
                   end
                   vim.fn.setreg("+", icon)
@@ -186,6 +265,7 @@ return {
   opts = {
     dashboard = {
       sections = {
+        -- BUG: https://github.com/folke/snacks.nvim/pull/1643
         {
           section = "terminal",
           cmd = "fortune -s | cowsay",
@@ -212,9 +292,91 @@ return {
       doc = {
         enabled = true,
       },
+      formats = {
+        "png",
+        "jpg",
+        "jpeg",
+        "gif",
+        "bmp",
+        "webp",
+        "tiff",
+        "heic",
+        "avif",
+        "mp4",
+        "mov",
+        "avi",
+        "mkv",
+        "webm",
+        "pdf",
+        "svg",
+      },
+      img_dirs = { "img", "images", "assets", "static", "public", "media", "attachments" },
+
+      -- Support 3 types.
+      -- img_src_maps = { ["^@assets"] = { "src/assets", "src/assets2" } },  -- Use string:gsub, so make sure to escape if you need litteral string.
+      img_src_maps = { ["^@assets"] = "src/assets" },
+      -- img_src_maps = function(buf_path, img_src) end
+
+      -- The 3rd type can return 2 types above or string. If return string = "XXX" -> img_src = "XXX".
+      -- img_src is relative source of the image.
+      -- In the example of vue above img_src is src attribute in <img> tag = "@assets/logo.svg"
+
+      -- img_src_maps = function(buf_path, img_src) return { ["^@assets"] = "src/assets" } end,
+      -- img_src_maps = function(buf_path, img_src) return "src/assets/logo.svg" end,
+      env = {
+        placeholders = true,
+      },
+      ---@param buf_path string
+      ---@param img_src string
+      resolve = function(buf_path, img_src)
+        local Snacks = require "snacks"
+        if not img_src:find "^%w%w+://" then
+          local img_src_maps = Snacks.image.config.img_src_maps
+          local cwd = uv.cwd() or "."
+          local checks = { [img_src] = true }
+          local srcs = { img_src }
+
+          if type(Snacks.image.config.img_src_maps) == "function" then
+            img_src_maps = Snacks.image.config.img_src_maps(buf_path, img_src)
+            if type(img_src_maps) == "string" then img_src = img_src_maps end
+          end
+          if type(img_src_maps) == "table" then
+            for pattern, replacement in pairs(img_src_maps) do
+              if type(replacement) == "string" then
+                srcs[#srcs + 1] = img_src:gsub(pattern, replacement)
+              elseif type(replacement) == "table" then
+                for _, r in ipairs(replacement) do
+                  srcs[#srcs + 1] = img_src:gsub(pattern, r)
+                end
+              end
+            end
+          end
+
+          for _, root in ipairs { cwd, vim.fs.dirname(buf_path) } do
+            for _, new_src in ipairs(srcs) do
+              checks[root .. "/" .. new_src] = true
+              for _, dir in ipairs(Snacks.image.config.img_dirs) do
+                dir = root .. "/" .. dir
+                if Snacks.image.doc.is_dir(dir) then checks[dir .. "/" .. new_src] = true end
+              end
+            end
+          end
+          vim.notify(vim.inspect(checks))
+          for f in pairs(checks) do
+            if vim.fn.filereadable(f) == 1 then
+              img_src = uv.fs_realpath(f) or f
+              break
+            end
+          end
+        end
+        img_src = vim.fs.normalize(img_src)
+        return img_src
+      end,
+      max_height = 20,
     },
     quickfile = {},
     lazygit = {},
+    ---@type snacks.picker.Config
     picker = {
       win = {
         input = {
