@@ -288,9 +288,9 @@ return {
       },
     },
     image = {
-      force = true,
+      force = false,
       doc = {
-        enabled = true,
+        enabled = false,
       },
       formats = {
         "png",
@@ -338,15 +338,20 @@ return {
 
           if type(Snacks.image.config.img_src_maps) == "function" then
             img_src_maps = Snacks.image.config.img_src_maps(buf_path, img_src)
-            if type(img_src_maps) == "string" then img_src = img_src_maps end
+            if type(img_src_maps) == "string" then
+              img_src = img_src_maps
+              checks[img_src] = true
+            end
           end
           if type(img_src_maps) == "table" then
             for pattern, replacement in pairs(img_src_maps) do
               if type(replacement) == "string" then
                 srcs[#srcs + 1] = img_src:gsub(pattern, replacement)
+                checks[srcs[#srcs]] = true
               elseif type(replacement) == "table" then
                 for _, r in ipairs(replacement) do
                   srcs[#srcs + 1] = img_src:gsub(pattern, r)
+                  checks[srcs[#srcs]] = true
                 end
               end
             end
@@ -361,7 +366,6 @@ return {
               end
             end
           end
-          vim.notify(vim.inspect(checks))
           for f in pairs(checks) do
             if vim.fn.filereadable(f) == 1 then
               img_src = uv.fs_realpath(f) or f
