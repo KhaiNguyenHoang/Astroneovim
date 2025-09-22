@@ -4,11 +4,10 @@ return {
     ft = "cs",
     dependencies = { "neovim/nvim-lspconfig" },
     config = function()
-      local lspconfig = require "lspconfig"
       local omnisharp_ext = require "omnisharp_extended"
 
       -- Setup OmniSharp với handler fix metadata URI
-      lspconfig.omnisharp.setup {
+      vim.lsp.config("omnisharp", {
         cmd = { "omnisharp", "--languageserver", "--hostPID", tostring(vim.fn.getpid()) },
         enable_editorconfig_support = true,
         enable_ms_build_load_projects_on_demand = true,
@@ -20,7 +19,7 @@ return {
           ["textDocument/typeDefinition"] = omnisharp_ext.handler,
           ["textDocument/implementation"] = omnisharp_ext.handler,
         },
-      }
+      })
 
       -- Keymaps
       local keymap = vim.keymap.set

@@ -3,11 +3,10 @@ return {
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
     "hrsh7th/cmp-nvim-lsp", -- để có completion capabilities
-    "folke/which-key.nvim", -- để hiện menu <space> l ...
+    "folke/which-key.nvim", -- để hiện menu <space>l ...
     "Hoffs/omnisharp-extended-lsp.nvim", -- để fix lỗi metadata definition
   },
   config = function()
-    local lspconfig = require "lspconfig"
     local capabilities = require("cmp_nvim_lsp").default_capabilities()
     local wk = require "which-key"
     local omnisharp_ext = require "omnisharp_extended"
@@ -17,8 +16,8 @@ return {
       l = { name = "LSP" },
     }, { prefix = "<leader>" })
 
-    -- Setup OmniSharp
-    lspconfig.omnisharp.setup {
+    -- Setup OmniSharp bằng API mới
+    vim.lsp.config("omnisharp", {
       cmd = { "omnisharp", "--languageserver", "--hostPID", tostring(vim.fn.getpid()) },
 
       enable_editorconfig_support = true,
@@ -78,6 +77,6 @@ return {
           vim.tbl_extend("force", opts, { desc = "Format Buffer" })
         )
       end,
-    }
+    })
   end,
 }
